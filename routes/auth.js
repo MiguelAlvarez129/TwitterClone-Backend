@@ -7,10 +7,10 @@ const config = require("../config/keys");
 const passport = require("passport");
 const User = require("../models/Users");
 const secret = require("../config/keys").secretOrKey;
+const {cloudinary} = require("../services/cloudinaryService");
 
 
 
-module.exports = (cloudinary) =>{
   router.post(
     "/auth",
     passport.authenticate("jwt", { session: false }),
@@ -105,6 +105,6 @@ module.exports = (cloudinary) =>{
       .catch((err) => console.log(err));
   });
 
-  return router
+module.exports = router
 
-};
+

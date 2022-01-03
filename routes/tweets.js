@@ -335,6 +335,7 @@ dayjs.extend(relativeTime)
       const {author,...contents} = tweet._doc;
       res.status(200).json({...contents,...userInfo,date})
     } catch (e) {
+      console.log("HERE!!")
       console.log(e)
       next()
     }

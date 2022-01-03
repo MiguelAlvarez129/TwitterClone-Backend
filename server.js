@@ -5,23 +5,21 @@ const userRoutes = require('./routes/users')
 const tweetRoutes = require('./routes/tweets')
 const {socketConfig} = require('./routes/socket')
 const app = express();
-//const app = require("./app")
 const passport = require('passport')
 const passportConfig = require('./config/passport')
 const GridFsStorage = require('multer-gridfs-storage');
 const multer = require('multer')
+const morgan = require('morgan')
 const config = require("./config/keys")
-const cloudinary = require('cloudinary').v2;
 const port = process.env.PORT || 5000; 
 //const httpServer = require("http").createServer(app(io))
 // const io = require("socket.io")(httpServer,{
 //   cors: {
-//     origin: "http://localhost:3000/",
+//     origin: "http://localhost:3000/", 
 //   }
 // })
 
-
-
+const chalk = require('chalk');
 const httpServer = require("http").createServer(app)
 const io =  require("socket.io")(httpServer,{
   cors:{
@@ -57,9 +55,23 @@ app.use((req,res,next)=>{
   res.header('Access-Control-Allow-Headers','*')
   next()
 })
-app.use('/app',userRoutes);
-app.use('/app',tweetRoutes);
-app.use('/app',authRoutes(cloudinary));
+
+app.use(morgan(function (tokens, req, res) {
+  return [
+    tokens.method(req, res),
+    tokens.url(req, res),
+    chalk.green(tokens.status(req, res)),
+    tokens.res(req, res, 'content-length'), '-',
+    tokens['response-time'](req, res), 'ms'
+  ].join(' ')
+})
+)
+
+app.get('/',(req,res)=>{
+  res.send("<h2 style='font-family: monospace;'> REST API for Twitter Clone </h2>")
+})
+
+app.use('/app',userRoutes,tweetRoutes,authRoutes);
 
 app.use((req,res,next)=>{
   const error = new Error("URL not found");
