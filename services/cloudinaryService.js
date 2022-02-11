@@ -21,7 +21,7 @@ const downloader = (file) =>{
   return new Promise((resolve,reject)=>{
     cloudinary.api.resource(file.fileId,(error,result)=>{
       if (error) {
-        if (error.http_code === 404){
+        if (error.http_code === 404 || 420){
           resolve(false)
         } else {
           reject(error)

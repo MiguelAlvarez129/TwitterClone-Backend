@@ -119,23 +119,29 @@ dayjs.extend(relativeTime)
         const date = getDate(e.date)
         if (e.retweet){
           const {retweet,retweet:{author}} = e;
-          console.log("author",author)
+          const retweetBy = e.author.fullname;
           try {
             const result = await downloader({fileId:`users/${author.username}/profile`})
             const userInfo = {image:result ? result.pic : " ",...author._doc}
             return { retweet:true,retweetBy,...userInfo,...retweet._doc,date}
           } catch (error) {
-            res.status(400).end()
+            if (error.http_code === 420){
+              return { retweet:true,retweetBy,...userInfo,...retweet._doc,date}
+            } else {
+
+            }
+            
           }
         } else {
           const {author} = e
           const result  = await downloader({fileId:`users/${author.username}/profile`})
           const userInfo = {image:result ? result.pic : " ",...author._doc}
+          
           return {...e._doc,...userInfo,date}
         }
       }))
       
-      res.status(200).json(feed)
+      return res.status(200).json(feed)
     } else {
       const feed = await Tweet.find({}, null, { sort: { date: "desc" } })
       .select("_id content comments likes files retweets content date")
@@ -164,7 +170,7 @@ dayjs.extend(relativeTime)
     const retweetBy = fullname;
     try{
       const tweets = await Tweet.find({ author: userId, comment: null}, null, { sort: { date: "desc" } })
-      .select("_id retweet content comment likes files retweets date")
+      .select("_id retweet content comment comments likes files retweets date")
       .populate({
       path:"retweet",
       select:"_id content comments likes files retweets content date",
@@ -173,7 +179,7 @@ dayjs.extend(relativeTime)
         select:"fullname username -_id"
       }
       })
-      .exec()
+      .exec() 
       console.log(tweets)
       const result = tweets.map(async (e)=>{
         const date = getDate(e.date)
