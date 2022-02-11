@@ -5,11 +5,13 @@ const userRoutes = require('./routes/users')
 const tweetRoutes = require('./routes/tweets')
 const {socketConfig} = require('./routes/socket')
 const app = express();
+
 const passport = require('passport')
 const passportConfig = require('./config/passport')
 const GridFsStorage = require('multer-gridfs-storage');
 const multer = require('multer')
 const morgan = require('morgan')
+const cors = require("cors")
 const config = require("./config/keys")
 const port = process.env.PORT || 5000; 
 //const httpServer = require("http").createServer(app(io))
@@ -50,11 +52,12 @@ app.use((req,res,next)=>{
   req.io = io;
   next()
 }) 
-app.use((req,res,next)=>{
-  res.header('Access-Control-Allow-Origin',"http://localhost:3000")
-  res.header('Access-Control-Allow-Headers','*')
-  next()
-})
+app.use(cors())
+// app.use((req,res,next)=>{ 
+//   res.header('Access-Control-Allow-Origin',"http://localhost:3000")
+//   res.header('Access-Control-Allow-Headers','*')
+//   next()
+// })
 
 app.use(morgan(function (tokens, req, res) {
   return [
