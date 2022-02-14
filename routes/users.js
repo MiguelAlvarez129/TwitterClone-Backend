@@ -26,15 +26,20 @@ router.get("/prueba", async (req, res) => {
 router.put("/usersettings", async (req, res) => {
   const { username, fullname, bio, pic, bg } = req.body;
   try {
-    const user = await User.findOneAndUpdate({ username }, { fullname, bio });
+    await User.findOneAndUpdate({ username }, { fullname, bio });
     let obj = {
       public_id: "profile",
       folder: `users/${username}`,
       overwrite: true,
     };
-    let result = await uploader(pic, obj);
-    obj.public_id = "bg";
-    result = await uploader(bg, obj);
+    if (pic){
+      await uploader(pic, obj);
+    }
+    if (bg){
+      obj.public_id = "bg";
+      await uploader(bg, obj);
+    }
+    
     res.status(200).json({ message: "User's data updated succesfully" });
   } catch (error) {
     console.log(error);
