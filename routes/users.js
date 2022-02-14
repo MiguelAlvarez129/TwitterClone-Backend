@@ -178,6 +178,7 @@ router.get(
           const resource = await cloudinary.api.resource(`users/${e.username}/profile`)
           return {...e,pic:resource.secure_url}
         } catch (error) {
+          console.log(error)
           if (error.error.http_code === 404){
             console.log("ERROR")
             return {...e,pic:""}
