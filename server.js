@@ -19,7 +19,7 @@ const port = process.env.PORT || 5000;
 //   cors: {
 //     origin: "http://localhost:3000/", 
 //   }
-// })
+// }) 
 
 const chalk = require('chalk');
 const httpServer = require("http").createServer(app)
