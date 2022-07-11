@@ -56,7 +56,7 @@ exports.addNotification = async (io,note,username) =>{
     console.log(user)
     user.notifications.pending++
     user.notifications.notes.unshift(note)
-    //user.markModified('notifications');
+    //user.markModified('notifications'); 
     await user.save()
     cache.storage
     .filter(e => e.username === username)
