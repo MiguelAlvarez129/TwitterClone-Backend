@@ -6,20 +6,24 @@ exports.socketConfig = (io) =>{
   
   io.on("connection", socket => {   
     console.log("new connection",socket.id)
+    const {id} = socket;
     socket.once("online",async (e)=>{
-      const {id,username} = e;
+      console.log(e,id)
+      const {username} = e;
       cache.storage.push({username,id}) 
       const user = await User.findOne({username})
       cache.storage
       .filter(e => e.username === username)
       .map(({username,id}) =>{
+        
         io.to(id).emit("notification",user.notifications.pending)
       })
       console.log("users",cache.storage)
     })
 
     socket.on("notificationsRead",async (e)=>{
-      const {id,username} = e;
+      const {username} = e;
+      // console.log(e)
       const array = cache.storage
       .filter(e => e.username === username)
       .map(async ({username,id}) =>{
