@@ -122,7 +122,7 @@ dayjs.extend(relativeTime)
           const retweetBy = e.author.fullname;
           try {
             const result = await downloader({fileId:`users/${author.username}/profile`})
-            const userInfo = {image:result ? result.pic : " ",...author._doc}
+            const userInfo = {image:result ? result.pic : null,...author._doc}
             return { retweet:true,retweetBy,...userInfo,...retweet._doc,date}
           } catch (error) {
             if (error.http_code === 420){
@@ -135,7 +135,7 @@ dayjs.extend(relativeTime)
         } else {
           const {author} = e
           const result  = await downloader({fileId:`users/${author.username}/profile`})
-          const userInfo = {image:result ? result.pic : " ",...author._doc}
+          const userInfo = {image:result ? result.pic : null,...author._doc}
           
           return {...e._doc,...userInfo,date}
         }
