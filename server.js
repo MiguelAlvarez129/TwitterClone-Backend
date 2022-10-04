@@ -1,8 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const authRoutes = require('./routes/auth')
-const userRoutes = require('./routes/users')
-const tweetRoutes = require('./routes/tweets')
+const authRoutes = require('./routes/auth.routes')
+// const userRoutes = require('./routes/users')
+// const tweetRoutes = require('./routes/tweets')
 const {socketConfig} = require('./routes/socket')
 const app = express();
 
@@ -74,7 +74,7 @@ app.get('/',(req,res)=>{
   res.send("<h2 style='font-family: monospace;'> REST API for Twitter Clone </h2>")
 })
 
-app.use('/app',userRoutes,tweetRoutes,authRoutes);
+app.use('/app',authRoutes);
 
 app.use((req,res,next)=>{
   const error = new Error("URL not found");

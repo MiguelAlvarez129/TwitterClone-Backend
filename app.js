@@ -1,5 +1,5 @@
 const express = require("express");
-const authRoutes = require('./routes/auth')
+const authRoutes = require('./routes/auth.routes')
 const userRoutes = require('./routes/users')
 const tweetRoutes = require('./routes/tweets')
 const passport = require('passport')
@@ -24,9 +24,10 @@ module.exports = (io) =>{
     req.io = io;
     next()
   })
-  app.use('/app',userRoutes);
-  app.use('/app',tweetRoutes);
-  app.use('/app',authRoutes(cloudinary));
+  // app.use('/app',userRoutes);
+  // app.use('/app',tweetRoutes);
+  // app.use('/app',authRoutes(cloudinary));
+  app.use('/app',)
 
  
   app.use((req,res,next)=>{

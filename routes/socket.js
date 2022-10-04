@@ -1,5 +1,5 @@
 const Tweet = require("../models/Tweets");
-const User = require("../models/Users");
+const User = require("../models/User");
 const cache = require("../services/cache")
 
 exports.socketConfig = (io) =>{
