@@ -1,23 +1,23 @@
 const User = require('../models/User')
-
+const bcrypt = require('bcrypt')
 const authController = {}
 
 
 authController.register = async (req,res) =>{
   try {
-    const { email, password, fullname } = req.body;
-    
-    const username = req.body.username.subString(1).toLowerCase() 
-    const user = await User.findOne({ $or: [{ username }, { email }] }).exec()
+    const { email, password, fullname } = req.body,
+    username = req.body.username.substring(1).toLowerCase(),
+    errors = [],
+    user = await User.findOne({ $or: [{ username }, { email }] }).exec()
     
     if (user){
       if (user.username == username) {
-        errors.username = "Username already exists";
+        errors.push("username");
       }
       if (user.email == email) {
-        errors.email = "Email already exists";
+        errors.push("email")
       }
-      res.status(400).json(errors);
+      res.status(409).json(errors);
     } else {
       const user = await new User({
                 email,
@@ -30,7 +30,7 @@ authController.register = async (req,res) =>{
         user.password = hash;
         user
           .save()
-          .then((user) => res.json(user))
+          .then(() => res.send({msg:"You have been registered successfully"}))
           .catch((err) => console.log(err));
       });
     }
