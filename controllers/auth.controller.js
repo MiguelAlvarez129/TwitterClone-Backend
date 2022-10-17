@@ -1,5 +1,6 @@
 const User = require('../models/User')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 const authController = {}
 
 
@@ -7,17 +8,17 @@ authController.register = async (req,res) =>{
   try {
     const { email, password, fullname } = req.body,
     username = req.body.username.substring(1).toLowerCase(),
-    errors = [],
+    errors = {},
     user = await User.findOne({ $or: [{ username }, { email }] }).exec()
     
     if (user){
       if (user.username == username) {
-        errors.push("username");
+        errors.username = "Username is already taken";
       }
       if (user.email == email) {
-        errors.push("email")
+        errors.email = "Email is already taken"
       }
-      res.status(409).json(errors);
+      return res.status(409).json(errors);
     } else {
       const user = await new User({
                 email,
@@ -39,38 +40,62 @@ authController.register = async (req,res) =>{
     res.status(500).json(error)
   }
 }
+
+authController.login = async (req,res) =>{
+  const { password } = req.body;
+  const username = req.body.username.substring(1).toLowerCase()
+  const user = await User.findOne({username}).exec()
+
+  if (!user){
+    res.status(404).send("Username doesn't exist")
+  } else {
+    const match = await bcrypt.compare(password, user.password)
+    if (match){
+      const payload = {
+        username: user.username,
+        id: user.id,
+        fullname:user.fullname,
+      };
+      jwt.sign(payload, process.env.secret, (err, token) => {
+        res.status(200).json({
+          token: "Bearer " + token,
+          user:{
+            ...payload
+          }
+        });
+      });
+    } else {
+      res.status(400).send("Incorrect password");
+    }
+  }
+}
   
-  // const { username, email, password, fullname } = req.body;
-  // User.findOne({ $or: [{ username }, { email }] })
-  //   .then((user) => {
-  //     if (user) {
-  //       console.log(user);
-  //       let errors = {};
-  //       if (user.username == username) {
-  //         errors.username = "Username already exists";
-  //       }
-  //       if (user.email == email) {
-  //         errors.email = "Email already exists";
-  //       }
-  //       res.status(400).json(errors);
-  //     } else {
-  //       const user = new User({
-  //         email,
-  //         username,
-  //         password,
-  //         fullname,
-  //       });
-        // bcrypt.hash(password, 10, (err, hash) => {
-        //   if (err) throw err;
-        //   user.password = hash;
-        //   user
-        //     .save()
-        //     .then((user) => res.json(user))
-        //     .catch((err) => console.log(err));
-        // });
-  //     }
-  //   })
-  //   .catch((err) => console.log(err));
+// router.post("/login", (req, res) => {
+//   const { username, password } = req.body;
+//   User.findOne({ username }).then((user) => {
+//     if (!user) {
+//       res.status(404).json({ error: "Username doesn't exist" });
+//     } else {
+//       bcrypt.compare(password, user.password).then((match) => {
+//         if (match) {
+//           const payload = {
+//             username: user.username,
+//             id: user.id,
+//             fullname:user.fullname,
+//           };
+//           jwt.sign(payload, secret, (err, token) => {
+//             res.status(200).json({
+//               token: "Bearer " + token,
+//               message: "Succesfully logged in",
+//             });
+//           });
+//         } else {
+//           res.status(400).json({ message: "Password Incorrect" });
+//         }
+//       });
+//     }
+//   });
+// });
 
 
 
