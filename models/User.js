@@ -42,10 +42,16 @@ const userSchema = new Schema({
         notes:{
             type:Array,
             
-        }
-
-        
-    }
+        }  
+    },
+    access_token:{
+        type:String,
+        default:"",
+    },
+    refresh_token:{
+        type:String,
+        default:"",
+    },
 
 })
 

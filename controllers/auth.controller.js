@@ -56,14 +56,16 @@ authController.login = async (req,res) =>{
         id: user.id,
         fullname:user.fullname,
       };
-      jwt.sign(payload, process.env.secret, (err, token) => {
-        res.status(200).json({
-          token: "Bearer " + token,
-          user:{
-            ...payload
-          }
-        });
-      });
+      const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"30s"});
+      const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn:"1d"});
+
+      user.access_token = accessToken
+      user.refresh_token = refreshToken
+
+      await user.save()
+      res.cookie('jwt',refreshToken,{httpOnly: true, maxAge: 60 * 60 * 24 * 1000})
+      res.json({accessToken})
+
     } else {
       res.status(400).send("Incorrect password");
     }

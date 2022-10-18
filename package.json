@@ -18,6 +18,7 @@
     "chalk": "^2.4.2",
     "cloudinary": "^1.25.0",
     "concurrently": "^5.3.0",
+    "cookie-parser": "^1.4.6",
     "dayjs": "^1.9.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
