@@ -64,10 +64,11 @@ authController.login = async (req,res) =>{
 
       await user.save()
       res.cookie('jwt',refreshToken,{httpOnly: true, maxAge: 60 * 60 * 24 * 1000})
-      res.json({accessToken})
+      res.json({accessToken, ...payload})
 
     } else {
       res.status(400).send("Incorrect password");
+      
     }
   }
 }
