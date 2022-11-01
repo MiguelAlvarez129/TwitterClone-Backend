@@ -56,7 +56,7 @@ authController.login = async (req,res) =>{
         id: user.id,
         fullname:user.fullname,
       };
-      const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"30s"});
+      const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"10s"});
       const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn:"1d"});
 
       user.access_token = accessToken
@@ -72,34 +72,19 @@ authController.login = async (req,res) =>{
     }
   }
 }
+
+authController.refreshToken = async (req,res) => {
+  const {jwt:token} = req.cookies;
+  const user = await User.findOne({refresh_token:token}).exec();
+  if (!user) return res.sendStatus(401)
+
+  jwt.verify(token,process.env.REFRESH_TOKEN_SECRET,(err,decoded)=>{
+    if (err) return res.sendStatus(403);
+    const {username,id,fullname} = decoded;
+    const accessToken = jwt.sign({username,id,fullname}, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"5s"});
+    res.send({accessToken,...decoded})
+  })
+}
   
-// router.post("/login", (req, res) => {
-//   const { username, password } = req.body;
-//   User.findOne({ username }).then((user) => {
-//     if (!user) {
-//       res.status(404).json({ error: "Username doesn't exist" });
-//     } else {
-//       bcrypt.compare(password, user.password).then((match) => {
-//         if (match) {
-//           const payload = {
-//             username: user.username,
-//             id: user.id,
-//             fullname:user.fullname,
-//           };
-//           jwt.sign(payload, secret, (err, token) => {
-//             res.status(200).json({
-//               token: "Bearer " + token,
-//               message: "Succesfully logged in",
-//             });
-//           });
-//         } else {
-//           res.status(400).json({ message: "Password Incorrect" });
-//         }
-//       });
-//     }
-//   });
-// });
-
-
 
 module.exports = authController

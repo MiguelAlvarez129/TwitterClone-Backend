@@ -2,9 +2,8 @@ const jwt = require('jsonwebtoken')
 require('dotenv').config()
 
 module.exports = (req,res,next) =>{
-  const auth = req.get('authorization');
-  if (!auth) res.sendStatus(401);
-  console.log(auth)
+  const auth = req.get('Authorization');
+  if (!auth) return res.sendStatus(401);
   const token = auth.split(' ')[1];
   jwt.verify(
     token,
@@ -12,7 +11,7 @@ module.exports = (req,res,next) =>{
     (err,decoded)=>{
       if (err) return res.sendStatus(403);
       req.user = {...decoded};
-      next();
+      next(); 
     })
 
 }

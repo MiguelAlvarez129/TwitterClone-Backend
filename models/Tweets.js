@@ -35,7 +35,7 @@ const tweetSchema = new Schema({
     },
     files:[
         {
-            fileId:String,
+            type:String,
         }
     ],
     retweets:{

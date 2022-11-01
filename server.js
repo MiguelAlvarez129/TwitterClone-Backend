@@ -1,44 +1,39 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const authRoutes = require('./routes/auth.routes')
-// const userRoutes = require('./routes/users')
-// const tweetRoutes = require('./routes/tweets')
+const tweetRoutes = require('./routes/tweet.routes')
+const userRoutes = require('./routes/user.routes')
 const {socketConfig} = require('./routes/socket')
 const app = express();
 
 const passport = require('passport')
 const passportConfig = require('./config/passport')
-const GridFsStorage = require('multer-gridfs-storage');
-const multer = require('multer')
 const morgan = require('morgan')
 const cors = require("cors")
-const config = require("./config/keys")
 const port = process.env.PORT || 5000; 
-//const httpServer = require("http").createServer(app(io))
-// const io = require("socket.io")(httpServer,{
-//   cors: {
-//     origin: "http://localhost:3000/", 
-//   }
-// }) 
-
-const chalk = require('chalk');
+const cookieParser = require("cookie-parser");
+const verifyJWT = require("./middleware/verifyJWT");
 const httpServer = require("http").createServer(app)
 const io =  require("socket.io")(httpServer,{
   cors:{
-    origin:"*",
+    origin:"http://localhost:3000", 
   }
 })
 
+const storage = require('./config/multer.storage')
 
 // Bodyparser middleware
 app.use(express.json());
 
 app.use(express.urlencoded());
 
+app.use(cookieParser());
+
 // Initialize Passport
-app.use(passport.initialize())
+// app.use(passport.initialize())
 // Passport Config
-passportConfig(passport)
+// passportConfig(passport)
+
 // DB Config
 const db = require("./config/keys").mongoURI;
 
@@ -48,29 +43,22 @@ app.use((req,res,next)=>{
   req.io = io;
   next()
 }) 
-app.use(cors())
-// app.use((req,res,next)=>{ 
-//   res.header('Access-Control-Allow-Origin',"http://localhost:3000")
-//   res.header('Access-Control-Allow-Headers','*')
-//   next()
-// })
 
-app.use(morgan(function (tokens, req, res) {
-  return [
-    tokens.method(req, res),
-    tokens.url(req, res),
-    chalk.green(tokens.status(req, res)),
-    tokens.res(req, res, 'content-length'), '-',
-    tokens['response-time'](req, res), 'ms'
-  ].join(' ')
-})
-)
+app.use(cors({
+  origin:'http://localhost:3000',
+  credentials: true,
+}))
+
+app.use(morgan(require("./config/morgan.config")))
 
 app.get('/',(req,res)=>{
   res.send("<h2 style='font-family: monospace;'> REST API for Twitter Clone </h2>")
 })
-
+app.use(express.static('public/uploads/'))
 app.use('/app',authRoutes);
+app.use(verifyJWT);
+app.use('/app',tweetRoutes,userRoutes);
+// app.use('/app',userRoutes);
 
 app.use((req,res,next)=>{
   const error = new Error("URL not found");
@@ -80,8 +68,7 @@ app.use((req,res,next)=>{
 
 app.use((error,req,res,next)=>{
   const {message} = error;
-  res.status(error.status||500)
-  res.json({
+  res.status(error.status||500).json({
     error:{
       message
     }

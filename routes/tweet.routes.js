@@ -1,7 +1,14 @@
 const router = require('express').Router()
-const verifyJWT = require('../middleware/verifyJWT');
-const tweetsController = require('../controllers/tweets.controller')
+const tweetController = require('../controllers/tweet.controller')
+const multer  = require('multer')
+const storage = require('../config/multer.storage')
+const upload = multer({ storage : storage })
 
-router.get('/feed',verifyJWT,tweetsController.getFeed)
+//GET
+router.get('/feed',tweetController.getFeed)
+
+//POST
+router.post('/create-tweet',upload.array('files',4),tweetController.createTweet)
+
 
 module.exports = router;
