@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const getDate = require('../utils/getDate')
+const mongooseLeanGetters = require('mongoose-lean-getters');
 
 const tweetSchema = new Schema({
     author: {
@@ -18,7 +20,8 @@ const tweetSchema = new Schema({
     ,
     date:{
         type: Date,
-        default: Date.now
+        default: Date.now,
+        get: getDate,
       },
     content:{
         type:String,
@@ -52,8 +55,12 @@ const tweetSchema = new Schema({
             commentId:String,
         }
     ]
+},{
+    toObject : {getters: true},
+    toJSON : {getters: true}
 })
 
+tweetSchema.plugin(mongooseLeanGetters)
 
 
 module.exports = Tweet = mongoose.model('Tweet',tweetSchema)

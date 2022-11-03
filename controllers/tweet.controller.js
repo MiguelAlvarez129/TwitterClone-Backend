@@ -1,12 +1,23 @@
+const dayjs = require("dayjs")
 const mongoose = require("mongoose")
 const Tweets = require("../models/Tweets")
 const User = require("../models/User")
 
 const tweetController = {}
 
-tweetController.getFeed = (req,res) =>{
-  res.send([])
-}
+tweetController.getFeed = async (req,res) =>{
+  try {
+    const tweets = await Tweets.find()
+    .populate({path:"author",select:"username fullname -_id"})
+    .lean({getters: true})
+    .exec()
+    res.json(tweets)
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).send()
+  }
+} 
 
 tweetController.createTweet = async (req,res) =>{
   try {
@@ -20,6 +31,22 @@ tweetController.createTweet = async (req,res) =>{
     });
     tweet.save();
     res.send()
+  } catch (error) {
+    console.log(error)
+    res.status(500).send()
+  }
+}
+
+tweetController.getTweet = async (req,res) =>{
+  try {
+    const {_id} = req.params;
+    console.log(_id, 'ID')
+    const tweet = await Tweets.findOne({_id})
+    .populate({path:"author",select:"username fullname -_id"})
+    .lean()
+    .exec()
+    const date = dayjs(tweet.date).format('h:mm A · D MMM YYYY')
+    res.send({...tweet,date})
   } catch (error) {
     console.log(error)
     res.status(500).send()

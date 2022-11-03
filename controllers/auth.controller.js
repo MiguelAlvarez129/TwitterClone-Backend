@@ -56,7 +56,7 @@ authController.login = async (req,res) =>{
         id: user.id,
         fullname:user.fullname,
       };
-      const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"10s"});
+      const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"30s"});
       const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn:"1d"});
 
       user.access_token = accessToken
@@ -81,7 +81,7 @@ authController.refreshToken = async (req,res) => {
   jwt.verify(token,process.env.REFRESH_TOKEN_SECRET,(err,decoded)=>{
     if (err) return res.sendStatus(403);
     const {username,id,fullname} = decoded;
-    const accessToken = jwt.sign({username,id,fullname}, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"5s"});
+    const accessToken = jwt.sign({username,id,fullname}, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"30s"});
     res.send({accessToken,...decoded})
   })
 }
