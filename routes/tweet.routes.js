@@ -9,6 +9,7 @@ router.get('/feed',tweetController.getFeed)
 router.get('/get-tweet/:_id',tweetController.getTweet)
 //POST
 router.post('/create-tweet',upload.array('files',4),tweetController.createTweet)
-
+//PATCH
+router.patch('/like-tweet',tweetController.like) 
 
 module.exports = router;

@@ -7,7 +7,7 @@ const tweetController = {}
 
 tweetController.getFeed = async (req,res) =>{
   try {
-    const tweets = await Tweets.find()
+    const tweets = await Tweets.find(null,null,{ sort: { date: "desc" }})
     .populate({path:"author",select:"username fullname -_id"})
     .lean({getters: true})
     .exec()
@@ -53,7 +53,27 @@ tweetController.getTweet = async (req,res) =>{
   }
 }
 
-
+tweetController.like = async (req,res) =>{
+  try {
+    const userId = req.user.id;
+    const {_id} = req.body;
+    const tweet = await Tweets.findOne({_id})
+    if (tweet){
+      if (tweet.likes.includes(userId)){
+        tweet.likes = tweet.likes.filter((id) => id !== userId)
+      } else {
+        tweet.likes.push(userId)
+      }
+      await tweet.save()
+      res.send(tweet.likes)
+    } else {
+      res.status(404).send();
+    }
+  } catch (error) {
+    console.log(error)
+    res.status(500).send()
+  }
+}
 
 module.exports = tweetController
 

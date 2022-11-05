@@ -54,7 +54,7 @@ app.use(morgan(require("./config/morgan.config")))
 app.get('/',(req,res)=>{
   res.send("<h2 style='font-family: monospace;'> REST API for Twitter Clone </h2>")
 })
-app.use(express.static('public/uploads/'))
+app.use('/public/uploads',express.static('public/uploads/'))
 app.use('/app',authRoutes);
 app.use(verifyJWT);
 app.use('/app',tweetRoutes,userRoutes);

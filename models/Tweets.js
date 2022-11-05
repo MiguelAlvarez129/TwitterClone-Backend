@@ -27,15 +27,11 @@ const tweetSchema = new Schema({
         type:String,
         default:"",
     },
-    likes:{
-        quantity:{
-            type:Number,
-            default:0,
-        },
-        usersLiked:[
-            String
-        ],
-    },
+    likes:[
+        {
+            type:String,
+        }
+    ],
     files:[
         {
             type:String,
