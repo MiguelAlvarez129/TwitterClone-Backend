@@ -7,9 +7,10 @@ const upload = multer({ storage : storage })
 //GET
 router.get('/feed',tweetController.getFeed)
 router.get('/get-tweet/:_id',tweetController.getTweet)
+router.get('/get-comments/:_id',tweetController.getComments)
 //POST
 router.post('/create-tweet',upload.array('files',4),tweetController.createTweet)
 //PATCH
-router.patch('/like-tweet',tweetController.like) 
+router.patch('/like-tweet',tweetController.likeTweet) 
 
 module.exports = router;

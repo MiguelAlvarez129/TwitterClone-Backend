@@ -13,10 +13,12 @@ const tweetSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref:"Tweet",
     },
-    comment: {
+    comments: [
+        {
         type: Schema.Types.ObjectId,
         ref:"Tweet",
-    }
+        }
+    ]
     ,
     date:{
         type: Date,

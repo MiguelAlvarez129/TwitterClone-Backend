@@ -21,7 +21,7 @@ tweetController.getFeed = async (req,res) =>{
 
 tweetController.createTweet = async (req,res) =>{
   try {
-    const {content} = req.body,
+    const {content,reply} = req.body,
     {id} = req.user;
     const files = req.files.map((e) => e.path);
     const tweet = new Tweets({
@@ -29,8 +29,16 @@ tweetController.createTweet = async (req,res) =>{
       content,
       files,
     });
+
+    if (reply){
+      const repliedTweet = await Tweets.findOne({_id:reply});
+      if (!repliedTweet) return res.sendStatus(404);
+      repliedTweet.comments.push(mongoose.Types.ObjectId(tweet._id));
+      repliedTweet.save();
+    }
+
     tweet.save();
-    res.send()
+    res.send();
   } catch (error) {
     console.log(error)
     res.status(500).send()
@@ -40,7 +48,6 @@ tweetController.createTweet = async (req,res) =>{
 tweetController.getTweet = async (req,res) =>{
   try {
     const {_id} = req.params;
-    console.log(_id, 'ID')
     const tweet = await Tweets.findOne({_id})
     .populate({path:"author",select:"username fullname -_id"})
     .lean()
@@ -53,7 +60,7 @@ tweetController.getTweet = async (req,res) =>{
   }
 }
 
-tweetController.like = async (req,res) =>{
+tweetController.likeTweet = async (req,res) =>{
   try {
     const userId = req.user.id;
     const {_id} = req.body;
@@ -69,6 +76,25 @@ tweetController.like = async (req,res) =>{
     } else {
       res.status(404).send();
     }
+  } catch (error) {
+    console.log(error)
+    res.status(500).send()
+  }
+}
+
+tweetController.getComments = async (req,res) => {
+  try {
+    const {_id} = req.params;
+    const {comments} = await Tweets.findOne({_id},null,{ sort: { date: "desc" }})
+    .populate({path:'comments._id', 
+    populate:{
+      path:"author",
+      select:"username -_id fullname"
+    }})
+    .lean({getters: true})
+    .exec()
+    res.send(comments.map(({_id}) => ({..._id})))
+
   } catch (error) {
     console.log(error)
     res.status(500).send()
