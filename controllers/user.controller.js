@@ -10,5 +10,19 @@ userController.getUsersList = async (req,res) => {
   res.send(users)
 }
 
+userController.getUser = async (req,res) => {
+  try {
+    const {username} = req.params;
+    const user = await User.findOne({username}).exec();
+    if (user){
+      res.send(user)
+    } else {
+      res.sendStatus(404)
+    }
+  } catch (error) {
+    console.log(error)
+    res.sendStatus(500)
+  }
+}
 
 module.exports = userController;

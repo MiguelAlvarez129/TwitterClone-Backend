@@ -101,5 +101,16 @@ tweetController.getComments = async (req,res) => {
   }
 }
 
+tweetController.getUserTweets = async (req,res) => {
+  try {
+    const {username} = req.params;
+    const user = await User.findOne({username}).exec();
+    const tweets = await Tweets.find({author:user._id},null,{ sort: { date: "desc" }}).populate('author').exec()
+    res.send(tweets)
+  } catch (error) {
+    console.log(error)
+    res.sendStatus(500)
+  }
+}
 module.exports = tweetController
 
