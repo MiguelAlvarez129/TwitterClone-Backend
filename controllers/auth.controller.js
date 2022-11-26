@@ -79,7 +79,7 @@ authController.refreshToken = async (req,res) => {
   if (!user) return res.sendStatus(401)
 
   jwt.verify(token,process.env.REFRESH_TOKEN_SECRET,(err,decoded)=>{
-    if (err) return res.sendStatus(403);
+    if (err) return res.sendStatus(400);
     const {username,id,fullname} = decoded;
     const accessToken = jwt.sign({username,id,fullname}, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"30s"});
     res.send({accessToken,...decoded})
