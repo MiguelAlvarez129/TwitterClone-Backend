@@ -11,7 +11,13 @@ module.exports = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const fileExt = file.mimetype.split('/')[1]
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    cb(null, file.fieldname + '-' + uniqueSuffix + '.' + fileExt)
+    req.path = `/${req.user.username}/${req.body.type}/${file.fieldname}`
+    if (req.body.type === 'profile'){
+      console.log(file,'PROFILE')
+      cb(null, file.fieldname + '.' + 'png')
+    } else {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+      cb(null, file.fieldname + '-' + uniqueSuffix + '.' + fileExt)
+    }
   }
 })

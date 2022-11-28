@@ -6,8 +6,6 @@ const userRoutes = require('./routes/user.routes')
 const {socketConfig} = require('./routes/socket')
 const app = express();
 
-const passport = require('passport')
-const passportConfig = require('./config/passport')
 const morgan = require('morgan')
 const cors = require("cors")
 const port = process.env.PORT || 5000; 
@@ -20,8 +18,6 @@ const io =  require("socket.io")(httpServer,{
   }
 })
 
-const storage = require('./config/multer.storage')
-
 // Bodyparser middleware
 app.use(express.json());
 
@@ -29,10 +25,6 @@ app.use(express.urlencoded());
 
 app.use(cookieParser());
 
-// Initialize Passport
-// app.use(passport.initialize())
-// Passport Config
-// passportConfig(passport)
 
 // DB Config
 const db = require("./config/keys").mongoURI;
@@ -54,11 +46,12 @@ app.use(morgan(require("./config/morgan.config")))
 app.get('/',(req,res)=>{
   res.send("<h2 style='font-family: monospace;'> REST API for Twitter Clone </h2>")
 })
+
+
 app.use('/public/uploads',express.static('public/uploads/'))
 app.use('/app',authRoutes);
 app.use(verifyJWT);
 app.use('/app',tweetRoutes,userRoutes);
-// app.use('/app',userRoutes);
 
 app.use((req,res,next)=>{
   const error = new Error("URL not found");

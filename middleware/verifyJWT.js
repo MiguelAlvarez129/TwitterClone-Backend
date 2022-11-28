@@ -9,7 +9,8 @@ module.exports = (req,res,next) =>{
     token,
     process.env.ACCESS_TOKEN_SECRET,
     (err,decoded)=>{
-      if (err) return res.sendStatus(403);
+      if (err) return res.sendStatus(401);
+      console.log('MIDDLEWARE')
       req.user = {...decoded};
       next(); 
     })

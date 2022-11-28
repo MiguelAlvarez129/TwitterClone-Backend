@@ -75,9 +75,11 @@ authController.login = async (req,res) =>{
 
 authController.refreshToken = async (req,res) => {
   const {jwt:token} = req.cookies;
+  console.log('REFRESH',token)
+  if (token === undefined) return res.sendStatus(403)
   const user = await User.findOne({refresh_token:token}).exec();
-  if (!user) return res.sendStatus(401)
-
+  console.log('REFRESH 401',user)
+  if (!user) return res.sendStatus(403)
   jwt.verify(token,process.env.REFRESH_TOKEN_SECRET,(err,decoded)=>{
     if (err) return res.sendStatus(400);
     const {username,id,fullname} = decoded;

@@ -24,6 +24,7 @@ tweetController.createTweet = async (req,res) =>{
     const {content,reply} = req.body,
     {id} = req.user;
     const files = req.files.map((e) => e.path);
+    console.log(files)
     const tweet = new Tweets({
       author: mongoose.Types.ObjectId(id),
       content,

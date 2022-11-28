@@ -52,6 +52,14 @@ const userSchema = new Schema({
         type:String,
         default:"",
     },
+    bgPic:{
+        type:String,
+        default:""
+    },
+    profilePic:{
+        type:String,
+        default:""
+    }
 
 })
 

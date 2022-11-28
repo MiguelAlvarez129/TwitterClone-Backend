@@ -25,4 +25,25 @@ userController.getUser = async (req,res) => {
   }
 }
 
+userController.updateProfile = async (req,res) => {
+  try {
+    const {id} = req.user;
+    const user = await User.findOne({_id:id}).exec()
+    console.log(req.files)
+    if (user){
+      if (req.files['profile']) user.bgPic = req.files['profile'][0].path;
+      if (req.files['bg']) user.bgPic = req.files['bg'][0].path;
+      user.bio = req.body.bio;
+      user.fullname = req.body.fullname
+      await user.save()
+      res.sendStatus(200)
+    } else {
+      res.sendStatus(404)
+    }
+  } catch (error) {
+    console.log(error)
+    res.sendStatus(500)
+  }
+}
+
 module.exports = userController;
