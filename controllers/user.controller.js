@@ -29,7 +29,7 @@ userController.updateProfile = async (req,res) => {
   try {
     const {id} = req.user;
     const user = await User.findOne({_id:id}).exec()
-    console.log(req.files)
+    // console.log(req.files)
     if (user){
       if (req.files['profile']) user.bgPic = req.files['profile'][0].path;
       if (req.files['bg']) user.bgPic = req.files['bg'][0].path;

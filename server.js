@@ -47,8 +47,29 @@ app.get('/',(req,res)=>{
   res.send("<h2 style='font-family: monospace;'> REST API for Twitter Clone </h2>")
 })
 
+app.use((req,res,next) => {
+  if (req.path.includes('profile')){
+    res.setHeader('Cache-Control', 'public, max-age=0, no-cache, no-store')
+  }
+  next()
+})
 
-app.use('/public/uploads',express.static('public/uploads/'))
+app.use('/public/uploads',express.static('public/uploads/',{
+  etag:false
+}))
+
+// const cacheControl = (res,path) =>{
+//   if (path.includes('profile')){
+
+//     console.log('here')
+//     res.setHeader('Cache-Control', 'public, max-age=0, no-cache, no-store')
+//   }
+
+// }
+
+// app.use(serveStatic(path.join(__dirname,'public/uploads/'),{
+//   setHeaders: cacheControl
+// }))
 app.use('/app',authRoutes);
 app.use(verifyJWT);
 app.use('/app',tweetRoutes,userRoutes);
