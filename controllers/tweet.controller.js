@@ -2,12 +2,13 @@ const dayjs = require("dayjs")
 const mongoose = require("mongoose")
 const Tweets = require("../models/Tweets")
 const User = require("../models/User")
+const Comments = require("../models/Comments")
 
 const tweetController = {}
 
 tweetController.getFeed = async (req,res) =>{
   try {
-    const tweets = await Tweets.find(null,null,{ sort: { date: "desc" }})
+    const tweets = await Tweets.find({parentId: null},null,{ sort: { date: "desc" }})
     .populate({path:"author",select:"username fullname -_id"})
     .lean({getters: true})
     .exec()
@@ -24,19 +25,12 @@ tweetController.createTweet = async (req,res) =>{
     const {content,reply} = req.body,
     {id} = req.user;
     const files = req.files.map((e) => e.path);
-    console.log(files)
     const tweet = new Tweets({
       author: mongoose.Types.ObjectId(id),
       content,
       files,
+      parentId: reply && mongoose.Types.ObjectId(reply)
     });
-
-    if (reply){
-      const repliedTweet = await Tweets.findOne({_id:reply});
-      if (!repliedTweet) return res.sendStatus(404);
-      repliedTweet.comments.push(mongoose.Types.ObjectId(tweet._id));
-      repliedTweet.save();
-    }
 
     tweet.save();
     res.send();
@@ -53,8 +47,12 @@ tweetController.getTweet = async (req,res) =>{
     .populate({path:"author",select:"username fullname -_id"})
     .lean()
     .exec()
-    const date = dayjs(tweet.date).format('h:mm A · D MMM YYYY')
-    res.send({...tweet,date})
+    if (tweet){
+      const date = dayjs(tweet.date).format('h:mm A · D MMM YYYY')
+      res.send({...tweet,date})
+    } else {
+      return res.sendStatus(404);
+    }
   } catch (error) {
     console.log(error)
     res.status(500).send()
@@ -86,16 +84,19 @@ tweetController.likeTweet = async (req,res) =>{
 tweetController.getComments = async (req,res) => {
   try {
     const {_id} = req.params;
-    const {comments} = await Tweets.findOne({_id},null,{ sort: { date: "desc" }})
-    .populate({path:'comments._id', 
-    populate:{
+    const comments = await Tweets.find({parentId : mongoose.Types.ObjectId(_id)})
+    
+    // const {comments} = await Tweets.findOne({_id},null,{ sort: { date: "desc" }})
+    .populate({
+   
       path:"author",
       select:"username -_id fullname"
-    }})
+    })
     .lean({getters: true})
     .exec()
-    res.send(comments.map(({_id}) => ({..._id})))
-
+    // res.send(comments.map(({_id}) => ({..._id})))
+    console.log(comments)
+    res.send(comments)
   } catch (error) {
     console.log(error)
     res.status(500).send()
@@ -115,3 +116,23 @@ tweetController.getUserTweets = async (req,res) => {
 }
 module.exports = tweetController
 
+
+tweetController.addComment = async (req,res) =>{
+  try {
+    const {content,reply} = req.body,
+    {id} = req.user;
+    const files = req.files.map((e) => e.path);
+    const comment = new Comments({
+      author: mongoose.Types.ObjectId(id),
+      tweetId: mongoose.Types.ObjectId(reply),
+      content,
+      files,
+    })
+
+    await comment.save();
+    res.send();
+  } catch (error) {
+    console.log(error)
+    res.sendStatus(500)
+  }
+}

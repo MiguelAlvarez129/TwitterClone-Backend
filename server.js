@@ -49,23 +49,33 @@ app.get('/',(req,res)=>{
 })
 
 app.use(async (req,res,next) => { 
-  if(/\/public\/uploads\/[0-9a-z]+\/profile/.test(req.path)){
-    console.log(req.path, 'PATH')
-    const imagePath = req.path.split(/(profile|bg)\./)
-    const files = await fs.readdir(path.join( __dirname,imagePath[0]))
-    console.log(files,imagePath)
-    const fileName = files.find(e => e.includes(imagePath[1]))
-    console.log(fileName)
-    if (fileName !== undefined){
-      console.log(req.url,imagePath[0] + fileName)
-      req.url = imagePath[0] + fileName
-      // res.setHeader('Cache-Control', 'public, max-age=0, no-cache, no-store')
-      // console.log(imagePath[0] + fileName)
-    }
-    // req.path = imagePath[0] + 
-  }
+  // try {
+  //   if(/\/public\/uploads\/[0-9a-z]+\/profile/.test(req.path)){
+  //     console.log(req.path, 'PATH')
+  //     const imagePath = req.path.split(/(profile|bg)\./)
+  //     const files = await fs.readdir(path.join( __dirname,imagePath[0]))
+  //     console.log(files,imagePath)
+  //     const 
+  //     fileName = files.find(e => e.includes(imagePath[1]))
+  //     console.log(fileName)
+  //     if (fileName !== undefined){
+  //       console.log(req.url,imagePath[0] + fileName)
+  //       req.url = imagePath[0] + fileName
+  //       res.setHeader('Cache-Control', 'public, max-age=0, no-cache, no-store')
+
+  //     } else {
+  //       return res.sendStatus(404)
+  //     }
+  //     // req.path = imagePath[0] + 
+  //   }
+  // } catch (error) {
+  //   console.log(error);
+  //   return res.sendStatus(404)
+  // }
   // if (req.path.includes('profile')){
-  //   res.setHeader('Cache-Control', 'public, max-age=0, no-cache, no-store')
+  //   req.url = req.url.replace(/\?.+/,'')
+  //   console.log(req.url,req.path)
+  //   // res.setHeader('Cache-Control', 'public, max-age=0, no-cache, no-store')
   // }
   next()
 }) 

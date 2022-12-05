@@ -14,8 +14,8 @@ module.exports = multer.diskStorage({
     const fileExt = file.mimetype.split('/')[1]
     req.path = `/${req.user.username}/${req.body.type}/${file.fieldname}`
     if (req.body.type === 'profile'){
-      const hash = crypto.randomBytes(4).toString('hex')
-      cb(null, file.fieldname + '-' +  hash +'.' + 'png')
+      // const hash = crypto.randomBytes(4).toString('hex')
+      cb(null, file.fieldname + '.' + 'png')
     } else {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
       cb(null, file.fieldname + '-' + uniqueSuffix + '.' + fileExt)

@@ -11,6 +11,7 @@ router.get('/get-comments/:_id',tweetController.getComments)
 router.get('/get-user-tweets/:username',tweetController.getUserTweets)
 //POST
 router.post('/create-tweet',upload.array('files',4),tweetController.createTweet)
+router.post('/add-comment',upload.array('files',4),tweetController.addComment)
 //PATCH
 router.patch('/like-tweet',tweetController.likeTweet) 
 
