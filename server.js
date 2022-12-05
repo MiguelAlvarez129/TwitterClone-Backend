@@ -5,12 +5,13 @@ const tweetRoutes = require('./routes/tweet.routes')
 const userRoutes = require('./routes/user.routes')
 const {socketConfig} = require('./routes/socket')
 const app = express();
-
+const fs = require('fs').promises
 const morgan = require('morgan')
 const cors = require("cors")
 const port = process.env.PORT || 5000; 
 const cookieParser = require("cookie-parser");
 const verifyJWT = require("./middleware/verifyJWT");
+const path = require("path");
 const httpServer = require("http").createServer(app)
 const io =  require("socket.io")(httpServer,{
   cors:{
@@ -47,15 +48,30 @@ app.get('/',(req,res)=>{
   res.send("<h2 style='font-family: monospace;'> REST API for Twitter Clone </h2>")
 })
 
-app.use((req,res,next) => {
-  if (req.path.includes('profile')){
-    res.setHeader('Cache-Control', 'public, max-age=0, no-cache, no-store')
+app.use(async (req,res,next) => { 
+  if(/\/public\/uploads\/[0-9a-z]+\/profile/.test(req.path)){
+    console.log(req.path, 'PATH')
+    const imagePath = req.path.split(/(profile|bg)\./)
+    const files = await fs.readdir(path.join( __dirname,imagePath[0]))
+    console.log(files,imagePath)
+    const fileName = files.find(e => e.includes(imagePath[1]))
+    console.log(fileName)
+    if (fileName !== undefined){
+      console.log(req.url,imagePath[0] + fileName)
+      req.url = imagePath[0] + fileName
+      // res.setHeader('Cache-Control', 'public, max-age=0, no-cache, no-store')
+      // console.log(imagePath[0] + fileName)
+    }
+    // req.path = imagePath[0] + 
   }
+  // if (req.path.includes('profile')){
+  //   res.setHeader('Cache-Control', 'public, max-age=0, no-cache, no-store')
+  // }
   next()
-})
+}) 
 
 app.use('/public/uploads',express.static('public/uploads/',{
-  etag:false
+
 }))
 
 // const cacheControl = (res,path) =>{
