@@ -14,5 +14,6 @@ router.post('/create-tweet',upload.array('files',4),tweetController.createTweet)
 router.post('/add-comment',upload.array('files',4),tweetController.addComment)
 //PATCH
 router.patch('/like-tweet',tweetController.likeTweet) 
+router.patch('/add-retweet',tweetController.addRetweet) 
 
 module.exports = router;

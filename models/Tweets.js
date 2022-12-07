@@ -36,15 +36,6 @@ const tweetSchema = new Schema({
             type:String,
         }
     ],
-    retweets:{
-        quantity:{
-            type:Number,
-            default:0,
-        },
-        usersRetweeted:[
-            String
-        ],
-    },
     comments:[
         {
             commentId:String,
