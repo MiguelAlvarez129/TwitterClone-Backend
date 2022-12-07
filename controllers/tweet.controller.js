@@ -9,10 +9,18 @@ const tweetController = {}
 tweetController.getFeed = async (req,res) =>{
   try {
     const tweets = await Tweets.find({parentId: null},null,{ sort: { date: "desc" }})
-    .populate({path:"author",select:"username fullname -_id"})
+    .populate({path:"author",select:"username fullname profilePic -_id"})
     .lean({getters: true})
     .exec()
-    res.json(tweets)
+
+    const feed = await Promise.all(tweets.map(async e => {
+      console.log(e._id)
+      const comments = await Tweets.find({parentId:mongoose.Types.ObjectId(e._id)})
+      .exec()
+      return {...e,comments}
+    }))
+
+    res.json(feed)
 
   } catch (error) {
     console.log(error)
@@ -44,7 +52,7 @@ tweetController.getTweet = async (req,res) =>{
   try {
     const {_id} = req.params;
     const tweet = await Tweets.findOne({_id})
-    .populate({path:"author",select:"username fullname -_id"})
+    .populate({path:"author",select:"username fullname profilePic -_id"})
     .lean()
     .exec()
     if (tweet){
@@ -90,7 +98,7 @@ tweetController.getComments = async (req,res) => {
     .populate({
    
       path:"author",
-      select:"username -_id fullname"
+      select:"username -_id fullname profilePic"
     })
     .lean({getters: true})
     .exec()

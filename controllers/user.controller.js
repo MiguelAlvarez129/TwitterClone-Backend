@@ -1,8 +1,14 @@
+const path = require("path");
 const User = require("../models/User");
-
-
+const fs = require('fs').promises
+const constants = require('fs').constants
 const userController = {}
 
+const checkFileExists = (path) => {
+  return fs.access(path,constants.F_OK)
+  .then(() => true)
+  .catch(() => false)
+}
 
 userController.getUsersList = async (req,res) => {
   const {id} = req.user;
@@ -29,14 +35,24 @@ userController.updateProfile = async (req,res) => {
   try {
     const {id} = req.user;
     const user = await User.findOne({_id:id}).exec()
-    // console.log(req.files)
     if (user){
-      if (req.files['profile']) user.bgPic = req.files['profile'][0].path;
+      if (req.files['profile']) {
+        const fileExists = await checkFileExists(user.profilePic)
+        
+        if (fileExists) await fs.unlink(user.profilePic)
+        
+        user.profilePic = req.files['profile'][0].path;
+      }
       if (req.files['bg']) user.bgPic = req.files['bg'][0].path;
       user.bio = req.body.bio;
       user.fullname = req.body.fullname
       await user.save()
-      res.sendStatus(200)
+      const json = {
+        profilePic:req.files['profile'] && req.files['profile'][0].path,
+        fullname: req.body.fullname
+      }
+      console.log(json)
+      res.send(json)
     } else {
       res.sendStatus(404)
     }

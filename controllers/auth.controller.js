@@ -55,6 +55,7 @@ authController.login = async (req,res) =>{
         username: user.username,
         id: user.id,
         fullname:user.fullname,
+        profilePic: user.profilePic
       };
       const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"30s"});
       const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn:"1d"});
@@ -80,11 +81,13 @@ authController.refreshToken = async (req,res) => {
   const user = await User.findOne({refresh_token:token}).exec();
   // console.log('REFRESH 401',user)
   if (!user) return res.sendStatus(403)
-  jwt.verify(token,process.env.REFRESH_TOKEN_SECRET,(err,decoded)=>{
+  jwt.verify(token,process.env.REFRESH_TOKEN_SECRET, async (err,decoded)=>{
     if (err) return res.sendStatus(400);
-    const {username,id,fullname} = decoded;
-    const accessToken = jwt.sign({username,id,fullname}, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"30s"});
-    res.send({accessToken,...decoded})
+    const {username,id} = decoded;
+    const {profilePic,fullname} = await User.findOne({_id:id}).exec()
+    
+    const accessToken = jwt.sign({username,id,fullname,profilePic}, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"30s"});
+    res.send({accessToken,...decoded,profilePic,fullname})
   })
 }
   
