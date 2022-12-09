@@ -4,10 +4,12 @@ const fs = require('fs').promises
 const constants = require('fs').constants
 const userController = {}
 
-const checkFileExists = (path) => {
-  return fs.access(path,constants.F_OK)
+const checkFileExists = async (path, property) => {
+  const check = fs.access(path,constants.F_OK)
   .then(() => true)
   .catch(() => false)
+
+  if (check) await fs.unlink(path)
 }
 
 userController.getUsersList = async (req,res) => {
@@ -37,13 +39,14 @@ userController.updateProfile = async (req,res) => {
     const user = await User.findOne({_id:id}).exec()
     if (user){
       if (req.files['profile']) {
-        const fileExists = await checkFileExists(user.profilePic)
-        
-        if (fileExists) await fs.unlink(user.profilePic)
-        
+        checkFileExists(user.profilePic)
         user.profilePic = req.files['profile'][0].path;
       }
-      if (req.files['bg']) user.bgPic = req.files['bg'][0].path;
+      if (req.files['bg']) {
+        checkFileExists(user.bgPic)
+        user.bgPic = req.files['bg'][0].path;
+      }
+      // if (req.files['bg']) user.bgPic = req.files['bg'][0].path;
       user.bio = req.body.bio;
       user.fullname = req.body.fullname
       await user.save()

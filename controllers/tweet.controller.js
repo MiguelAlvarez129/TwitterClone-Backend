@@ -1,30 +1,33 @@
 const dayjs = require("dayjs")
 const mongoose = require("mongoose")
-const Tweets = require("../models/Tweets")
+// const Tweets = require("../models/Tweets")
 const User = require("../models/User")
-const Comments = require("../models/Comments")
-
+// const Comments = require("../models/Comments")
+const {Tweets,Comment} = require("../models/Prueba")
 const tweetController = {}
 
 tweetController.getFeed = async (req,res) =>{
   try {
-    const tweets = await Tweets.find({parentId: null},null,{ sort: { date: "desc" }})
+    const tweets = await Tweets.find({__t: null},null,{ sort: { date: "desc" }})
     .populate({path:"author",select:"username fullname profilePic -_id"})
-    .populate({path:"retweet", populate : {
-      path:'author',
-      select: '-_id fullname username'
-    }})
-    .lean({getters: true})
+    // .populate({path:"retweet", populate : {
+    //   path:'author',
+    //   select: '-_id fullname username'
+    // }})
+    .populate({
+      path:'comments',
+    })
+    .lean({getters: true, virtuals: true}) 
     .exec()
-
-    const feed = await Promise.all(tweets.map(async e => {
-      const comments = await Tweets.countDocuments({parentId:mongoose.Types.ObjectId(e._id)})
-      .exec()
+    console.log(tweets[0].comments)
+    // const feed = await Promise.all(tweets.map(async e => {
+    //   const comments = await Tweets.countDocuments({parentId:mongoose.Types.ObjectId(e._id)})
+    //   .exec()
       
       
-      return {...e,comments}
-    }))
-    res.json(feed)
+    //   return {...e,comments}
+    // }))
+    res.json(tweets)
 
   } catch (error) {
     console.log(error)
@@ -41,9 +44,9 @@ tweetController.createTweet = async (req,res) =>{
       author: mongoose.Types.ObjectId(id),
       content,
       files,
-      parentId: reply && mongoose.Types.ObjectId(reply)
+      // parentId: reply && mongoose.Types.ObjectId(reply)
     });
-
+    console.log(tweet)
     tweet.save();
     res.send();
   } catch (error) {
@@ -96,19 +99,20 @@ tweetController.likeTweet = async (req,res) =>{
 tweetController.getComments = async (req,res) => {
   try {
     const {_id} = req.params;
-    const tweets = await Tweets.find({parentId : mongoose.Types.ObjectId(_id)})
+
+    const tweets = await Comment.find({parentId : mongoose.Types.ObjectId(_id)})
     .populate({
       path:"author",
       select:"username -_id fullname profilePic"
     })
     .lean({getters: true})
     .exec()
-    const comments = await Promise.all(tweets.map(async e => {
-      const comments = await Tweets.countDocuments({parentId:mongoose.Types.ObjectId(e._id)})
-      .exec()
-      return {...e,comments}
-    }))
-    res.send(comments)
+    // const comments = await Promise.all(tweets.map(async e => {
+    //   const comments = await Tweets.countDocuments({parentId:mongoose.Types.ObjectId(e._id)})
+    //   .exec()
+    //   return {...e,comments}
+    // }))
+    res.send(tweets)
   } catch (error) {
     console.log(error)
     res.status(500).send()
@@ -146,9 +150,9 @@ tweetController.addComment = async (req,res) =>{
     const {content,reply} = req.body,
     {id} = req.user;
     const files = req.files.map((e) => e.path);
-    const comment = new Comments({
+    const comment = new Comment({
       author: mongoose.Types.ObjectId(id),
-      tweetId: mongoose.Types.ObjectId(reply),
+      parentId: mongoose.Types.ObjectId(reply),
       content,
       files,
     })
