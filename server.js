@@ -5,13 +5,11 @@ const tweetRoutes = require('./routes/tweet.routes')
 const userRoutes = require('./routes/user.routes')
 const {socketConfig} = require('./routes/socket')
 const app = express();
-const fs = require('fs').promises
 const morgan = require('morgan')
 const cors = require("cors")
 const port = process.env.PORT || 5000; 
 const cookieParser = require("cookie-parser");
 const verifyJWT = require("./middleware/verifyJWT");
-const path = require("path");
 const httpServer = require("http").createServer(app)
 const io =  require("socket.io")(httpServer,{
   cors:{
@@ -19,12 +17,11 @@ const io =  require("socket.io")(httpServer,{
   }
 })
 
-// Bodyparser middleware
 app.use(express.json());
 
 app.use(express.urlencoded());
 
-app.use(cookieParser());
+app.use(cookieParser()); 
 
 
 // DB Config
@@ -48,54 +45,10 @@ app.get('/',(req,res)=>{
   res.send("<h2 style='font-family: monospace;'> REST API for Twitter Clone </h2>")
 })
 
-app.use(async (req,res,next) => { 
-  // try {
-  //   if(/\/public\/uploads\/[0-9a-z]+\/profile/.test(req.path)){
-  //     console.log(req.path, 'PATH')
-  //     const imagePath = req.path.split(/(profile|bg)\./)
-  //     const files = await fs.readdir(path.join( __dirname,imagePath[0]))
-  //     console.log(files,imagePath)
-  //     const 
-  //     fileName = files.find(e => e.includes(imagePath[1]))
-  //     console.log(fileName)
-  //     if (fileName !== undefined){
-  //       console.log(req.url,imagePath[0] + fileName)
-  //       req.url = imagePath[0] + fileName
-  //       res.setHeader('Cache-Control', 'public, max-age=0, no-cache, no-store')
 
-  //     } else {
-  //       return res.sendStatus(404)
-  //     }
-  //     // req.path = imagePath[0] + 
-  //   }
-  // } catch (error) {
-  //   console.log(error);
-  //   return res.sendStatus(404)
-  // }
-  // if (req.path.includes('profile')){
-  //   req.url = req.url.replace(/\?.+/,'')
-  //   console.log(req.url,req.path)
-  //   // res.setHeader('Cache-Control', 'public, max-age=0, no-cache, no-store')
-  // }
-  next()
-}) 
+app.use('/public/uploads',express.static('public/uploads/'))
 
-app.use('/public/uploads',express.static('public/uploads/',{
 
-}))
-
-// const cacheControl = (res,path) =>{
-//   if (path.includes('profile')){
-
-//     console.log('here')
-//     res.setHeader('Cache-Control', 'public, max-age=0, no-cache, no-store')
-//   }
-
-// }
-
-// app.use(serveStatic(path.join(__dirname,'public/uploads/'),{
-//   setHeaders: cacheControl
-// }))
 app.use('/app',authRoutes);
 app.use(verifyJWT);
 app.use('/app',tweetRoutes,userRoutes);
