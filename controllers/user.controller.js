@@ -5,7 +5,7 @@ const constants = require('fs').constants
 const userController = {}
 
 const checkFileExists = async (path, property) => {
-  const check = fs.access(path,constants.F_OK)
+  const check = await fs.access(path,constants.F_OK)
   .then(() => true)
   .catch(() => false)
 

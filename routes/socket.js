@@ -1,4 +1,4 @@
-const Tweet = require("../models/Tweets");
+const Tweet = require("../models/Tweets-old");
 const User = require("../models/User");
 const cache = require("../services/cache")
 

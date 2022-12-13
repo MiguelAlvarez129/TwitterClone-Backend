@@ -12,8 +12,9 @@ router.get('/get-user-tweets/:username',tweetController.getUserTweets)
 //POST
 router.post('/create-tweet',upload.array('files',4),tweetController.createTweet)
 router.post('/add-comment',upload.array('files',4),tweetController.addComment)
-//PATCH
+router.post('/add-retweet',upload.array('files',4),tweetController.addRetweet) 
+//PATCH 
 router.patch('/like-tweet',tweetController.likeTweet) 
-router.patch('/add-retweet',tweetController.addRetweet) 
-
+//DELETE
+router.delete('/remove-retweet',tweetController.removeRetweet)
 module.exports = router;

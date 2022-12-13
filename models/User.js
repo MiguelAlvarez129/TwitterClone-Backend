@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-
+const replaceUrl = require("../utils/replaceUrl")
 const userSchema = new Schema({
     fullname:{
         type:String,
@@ -54,13 +54,18 @@ const userSchema = new Schema({
     },
     bgPic:{
         type:String,
-        default:""
+        default:"",
+        get: replaceUrl,
     },
     profilePic:{
         type:String,
-        default:""
+        default:"",
+        get: replaceUrl,
     }
-
-})
+},
+{
+    toObject : {getters: true },
+    toJSON : {getters: true }
+  })
 
 module.exports = User = mongoose.model('User',userSchema)

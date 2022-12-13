@@ -3,30 +3,28 @@ const mongoose = require("mongoose")
 // const Tweets = require("../models/Tweets")
 const User = require("../models/User")
 // const Comments = require("../models/Comments")
-const {Tweets,Comment} = require("../models/Prueba")
+const {Tweets,Comment,Retweet} = require("../models/Tweets")
 const tweetController = {}
 
 tweetController.getFeed = async (req,res) =>{
   try {
-    const tweets = await Tweets.find({__t: null},null,{ sort: { date: "desc" }})
+    const tweets = await Tweets.find({$or:[{__t:[null,'Retweet']}]},null,{ sort: { date: "desc" }})
     .populate({path:"author",select:"username fullname profilePic -_id"})
-    // .populate({path:"retweet", populate : {
-    //   path:'author',
-    //   select: '-_id fullname username'
-    // }})
+    .populate('comments')
     .populate({
-      path:'comments',
+      path:'retweet',
+      populate:[
+        {path:"author",select:"username fullname profilePic -_id"},
+        {path:'retweet', populate:{path:"author"}}
+      ]
+    })
+    .populate({
+      path:'retweets',
+      
     })
     .lean({getters: true, virtuals: true}) 
     .exec()
-    console.log(tweets[0].comments)
-    // const feed = await Promise.all(tweets.map(async e => {
-    //   const comments = await Tweets.countDocuments({parentId:mongoose.Types.ObjectId(e._id)})
-    //   .exec()
-      
-      
-    //   return {...e,comments}
-    // }))
+
     res.json(tweets)
 
   } catch (error) {
@@ -60,7 +58,18 @@ tweetController.getTweet = async (req,res) =>{
     const {_id} = req.params;
     const tweet = await Tweets.findOne({_id})
     .populate({path:"author",select:"username fullname profilePic -_id"})
-    .lean()
+    .populate('comments')
+    .populate({
+      path:'retweet',
+      populate:{
+        path:"author",select:"username fullname profilePic -_id"
+      }
+    })
+    .populate({
+      path:'retweets',
+      select:"author"
+    })
+    .lean({ virtuals: true}) 
     .exec()
     if (tweet){
       const date = dayjs(tweet.date).format('h:mm A · D MMM YYYY')
@@ -105,13 +114,9 @@ tweetController.getComments = async (req,res) => {
       path:"author",
       select:"username -_id fullname profilePic"
     })
+    .populate('comments')
     .lean({getters: true})
     .exec()
-    // const comments = await Promise.all(tweets.map(async e => {
-    //   const comments = await Tweets.countDocuments({parentId:mongoose.Types.ObjectId(e._id)})
-    //   .exec()
-    //   return {...e,comments}
-    // }))
     res.send(tweets)
   } catch (error) {
     console.log(error)
@@ -128,16 +133,18 @@ tweetController.getUserTweets = async (req,res) => {
       path:"author",
       select:"username -_id fullname profilePic"
     })
-    .lean({getters: true})
+    .populate('comments')
+    .populate({
+      path:'retweet',
+      populate:{
+        path:"author",
+        select:"username -_id fullname profilePic"
+      }
+    })
+    .lean({getters: true, virtuals:true})
     .exec()
     
-    const tweetsWithComments = await Promise.all(tweets.map(async e => {
-      const comments = await Tweets.countDocuments({parentId:mongoose.Types.ObjectId(e._id)})
-      .exec()
-      return {...e,comments}
-    }))
-    
-    res.send(tweetsWithComments)
+    res.send(tweets)
   } catch (error) {
     console.log(error)
     res.sendStatus(500)
@@ -168,28 +175,50 @@ tweetController.addComment = async (req,res) =>{
 tweetController.addRetweet = async (req,res) =>{
   try {
     const userId = req.user.id;
-    const {_id} = req.body;
-    // const files = req.files.map((e) => e.path);
-    const tweet = new Tweet({
+    const {content,_id} = req.body;
+    const files = req.files?.map((e) => e.path);
+    const tweet = new Retweet({
       author: mongoose.Types.ObjectId(userId),
-      retweet:mongoose.Types.ObjectId(_id),
+      retweetId:mongoose.Types.ObjectId(_id),
+      quotedRetweet: !!content,
+      content,
+      files,
     })
-
     await tweet.save()
-
-    res.send()
-    // const tweet = await Tweets.findOne({_id})
-    // if (tweet){
-    //   if (tweet.likes.includes(userId)){
-    //     tweet.likes = tweet.likes.filter((id) => id !== userId)
-    //   } else {
-    //     tweet.likes.push(userId)
-    //   }
-    //   await tweet.save()
-    //   res.send(tweet.likes)
+    // const found = await Tweets.findOne({retweetId:mongoose.Types.ObjectId(_id),author:userId})
+    // .exec()
+    // if (found){
+    //   await Tweets.deleteOne({_id:found._id})
     // } else {
-    //   res.status(404).send();
+    //   const files = req.files?.map((e) => e.path);
+    //   const tweet = new Retweet({
+    //     author: mongoose.Types.ObjectId(userId),
+    //     retweetId:mongoose.Types.ObjectId(_id),
+    //     quotedRetweet: !!content,
+    //     content,
+    //     files,
+    //   })
+    //   await tweet.save()
     // }
+    res.send()
+  } catch (error) {
+    console.log(error)
+    res.status(500).send()
+  }
+}
+
+
+tweetController.removeRetweet = async (req,res) => {
+  try {
+    const userId = req.user.id;
+    const {_id} = req.body;
+    const found = await Tweets.findOne({retweetId:mongoose.Types.ObjectId(_id),author:userId})
+    if (found){
+      await Tweets.deleteOne({_id:found._id})
+      return res.sendStatus(200)
+    } else {
+      return res.sendStatus(404)
+    }
   } catch (error) {
     console.log(error)
     res.status(500).send()
