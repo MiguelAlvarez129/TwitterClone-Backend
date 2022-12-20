@@ -65,9 +65,10 @@ tweetController.getTweet = async (req,res) =>{
     .populate('comments')
     .populate({
       path:'retweet',
-      populate:{
-        path:"author",select:"username fullname profilePic -_id"
-      }
+      populate:[
+        {path:"author",select:"username fullname profilePic -_id"},
+        {path:'retweet', populate:{path:"author"}}
+      ]
     })
     .populate({
       path:'retweets',
@@ -123,7 +124,18 @@ tweetController.getComments = async (req,res) => {
       select:"username -_id fullname profilePic"
     })
     .populate('comments')
-    .lean({getters: true})
+    .populate({
+      path:'retweet',
+      populate:[
+        {path:"author",select:"username fullname profilePic -_id"},
+        {path:'retweet', populate:{path:"author"}}
+      ]
+    })
+    .populate({
+      path:'retweets',
+      select:"author"
+    })
+    .lean({getters: true, virtuals:true})
     .exec()
     res.send(tweets)
   } catch (error) {
@@ -144,10 +156,14 @@ tweetController.getUserTweets = async (req,res) => {
     .populate('comments')
     .populate({
       path:'retweet',
-      populate:{
-        path:"author",
-        select:"username -_id fullname profilePic"
-      }
+      populate:[
+        {path:"author",select:"username fullname profilePic -_id"},
+        {path:'retweet', populate:{path:"author"}}
+      ]
+    })
+    .populate({
+      path:'retweets',
+      select:"author"
     })
     .lean({getters: true, virtuals:true})
     .exec()
@@ -193,21 +209,6 @@ tweetController.addRetweet = async (req,res) =>{
       files,
     })
     await tweet.save()
-    // const found = await Tweets.findOne({retweetId:mongoose.Types.ObjectId(_id),author:userId})
-    // .exec()
-    // if (found){
-    //   await Tweets.deleteOne({_id:found._id})
-    // } else {
-    //   const files = req.files?.map((e) => e.path);
-    //   const tweet = new Retweet({
-    //     author: mongoose.Types.ObjectId(userId),
-    //     retweetId:mongoose.Types.ObjectId(_id),
-    //     quotedRetweet: !!content,
-    //     content,
-    //     files,
-    //   })
-    //   await tweet.save()
-    // }
     res.send()
   } catch (error) {
     console.log(error)

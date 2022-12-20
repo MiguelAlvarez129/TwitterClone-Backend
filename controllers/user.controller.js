@@ -13,9 +13,17 @@ const checkFileExists = async (path, property) => {
 }
 
 userController.getUsersList = async (req,res) => {
-  const {id} = req.user;
-  const users = await User.find({_id:{$ne:id}}).select('username fullname')
-  res.send(users)
+  try {
+    const {id} = req.user;
+    const users = await User.find({_id:{$ne:id}})
+    .select('username fullname profilePic')
+    .exec()
+    res.send(users)
+
+  } catch (error) {
+    console.log(error)
+    res.sendStatus(500)
+  }
 }
 
 userController.getUser = async (req,res) => {
