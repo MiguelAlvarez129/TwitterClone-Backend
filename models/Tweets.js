@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 const getDate = require('../utils/getDate')
 const mongooseLeanGetters = require('mongoose-lean-getters');
 const mongooseLeanVirtuals = require('mongoose-lean-virtuals');
+const addNotification = require('../models/postMiddleware/addNotification')
 
 const tweetSchema = new Schema({
   author: {
@@ -56,6 +57,7 @@ tweetSchema.virtual('retweets',{
   foreignField:'retweetId',
 })
 
+tweetSchema.post('save', async (_doc) => addNotification(_doc))
 
 const Tweets = mongoose.model('Twitter',tweetSchema)
 

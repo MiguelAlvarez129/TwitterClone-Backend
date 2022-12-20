@@ -6,6 +6,10 @@ const User = require("../models/User")
 const {Tweets,Comment,Retweet} = require("../models/Tweets")
 const tweetController = {}
 
+const type = Symbol('type')
+const from = Symbol('from')
+const undo = Symbol('undo')
+
 tweetController.getFeed = async (req,res) =>{
   try {
     const tweets = await Tweets.find({$or:[{__t:[null,'Retweet']}]},null,{ sort: { date: "desc" }})
@@ -91,9 +95,13 @@ tweetController.likeTweet = async (req,res) =>{
     if (tweet){
       if (tweet.likes.includes(userId)){
         tweet.likes = tweet.likes.filter((id) => id !== userId)
+        tweet[type] = 'remove'
       } else {
         tweet.likes.push(userId)
+        tweet[type] = 'like'
       }
+      tweet instanceof Tweets
+      tweet[from] = userId
       await tweet.save()
       res.send(tweet.likes)
     } else {
