@@ -4,7 +4,7 @@ const getDate = require('../utils/getDate')
 const mongooseLeanGetters = require('mongoose-lean-getters');
 const mongooseLeanVirtuals = require('mongoose-lean-virtuals');
 const addNotification = require('../models/postMiddleware/addNotification')
-
+const {TweetNotifications} = require('../models/Notifications')
 const tweetSchema = new Schema({
   author: {
       type: Schema.Types.ObjectId,
@@ -58,7 +58,14 @@ tweetSchema.virtual('retweets',{
 })
 
 tweetSchema.post('save', async (_doc) => addNotification(_doc))
-
+tweetSchema.post('remove', async (_doc) => {
+  const props = Object.getOwnPropertySymbols(_doc)
+  console.log("DELETE",_doc)
+  if (props){
+    const [from] = props
+    await TweetNotifications.deleteOne({tweetId:_doc._id,from:_doc[from]});
+  }
+})
 const Tweets = mongoose.model('Twitter',tweetSchema)
 
 const Comment = Tweets.discriminator('Comment',

@@ -1,5 +1,5 @@
 const User = require('../../models/User');
-const Notifications = require('../../models/Notifications');
+const {TweetNotifications} = require('../../models/Notifications');
 const {Tweets,Retweet} = require('../../models/Tweets')
 const mongoose = require('mongoose');
 
@@ -7,28 +7,32 @@ const mongoose = require('mongoose');
 module.exports = async (_doc) =>{
   const props = Object.getOwnPropertySymbols(_doc)
   if (props){
-    // if (_doc instanceof Tweets){
-    //   console.log('TWEET!')
-    // } else {
-    //   console.log('NOT TWEET')
-    // }
-    console.log(_doc.model)
-    // const [type,from] = props
-    // const {username} = await User.findOne({_id:_doc[from]}).select('username').exec()
-    // let content;
-    // if (_doc[type] === 'remove'){
+    const [type,from] = props
+    if (!_doc[type]){
+      await TweetNotifications.deleteOne({tweetId:_doc._id,from:_doc[from]});
+    } else {
+      const {username} = await User.findOne({_id:_doc[from]}).select('username').exec()
+      let content = getContent(_doc[type],username);
+      
+      const notification = new TweetNotifications({
+        for:mongoose.Types.ObjectId(_doc.author),
+        from: mongoose.Types.ObjectId(_doc[from]),
+        tweetId:_doc._id,
+        content,
+      })
 
-    // } else if (_doc[type] === 'like'){
-    //   content = `@${username} liked your tweet`
-    // } 
+      await notification.save()
+    }
+  }
+}
 
-    // const notification = new Notifications({
-    //   for:mongoose.Types.ObjectId(_doc.author),
-    //   from: mongoose.Types.ObjectId(_doc[from]),
-    //   content,
-    // })
-
-    // await notification.save()
-
+const getContent = (type,username) =>{
+  switch(true){
+    case type === 'like':
+      return `@${username} liked your tweet`
+    case type === 'retweet':
+      return `@${username} retweeted your tweet`
+    default:
+      return ''
   }
 }

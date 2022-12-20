@@ -48,7 +48,6 @@ tweetController.createTweet = async (req,res) =>{
       files,
       // parentId: reply && mongoose.Types.ObjectId(reply)
     });
-    console.log(tweet)
     tweet.save();
     res.send();
   } catch (error) {
@@ -96,12 +95,11 @@ tweetController.likeTweet = async (req,res) =>{
     if (tweet){
       if (tweet.likes.includes(userId)){
         tweet.likes = tweet.likes.filter((id) => id !== userId)
-        tweet[type] = 'remove'
+        tweet[type] = false
       } else {
         tweet.likes.push(userId)
         tweet[type] = 'like'
       }
-      tweet instanceof Tweets
       tweet[from] = userId
       await tweet.save()
       res.send(tweet.likes)
@@ -208,6 +206,8 @@ tweetController.addRetweet = async (req,res) =>{
       content,
       files,
     })
+    tweet[type] = 'retweet'
+    tweet[from] = userId
     await tweet.save()
     res.send()
   } catch (error) {
@@ -223,7 +223,9 @@ tweetController.removeRetweet = async (req,res) => {
     const {_id} = req.body;
     const found = await Tweets.findOne({retweetId:mongoose.Types.ObjectId(_id),author:userId})
     if (found){
-      await Tweets.deleteOne({_id:found._id})
+      found[from] = userId
+      // await Tweets.deleteOne({_id:found._id})
+      await found.remove()
       return res.sendStatus(200)
     } else {
       return res.sendStatus(404)
