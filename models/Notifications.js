@@ -8,7 +8,7 @@ const notificationSchema = new Schema({
     ref:"User",
     required:true,
   },
-  from:{
+  from:{ 
     type:Schema.Types.ObjectId,
     ref:"User",
     required:true,
@@ -17,10 +17,10 @@ const notificationSchema = new Schema({
     type:String,
     default:"",
   },
-  // url:{
-  //   Type: Schema.Types.String,
-  //   default:'',
-  // },
+  path:{
+    type: String,
+    default:"",
+  },
 })
 
 

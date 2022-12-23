@@ -185,7 +185,8 @@ tweetController.addComment = async (req,res) =>{
       content,
       files,
     })
-
+    tweet[type] = 'comment'
+    tweet[from] = userId
     await comment.save();
     res.send();
   } catch (error) {
