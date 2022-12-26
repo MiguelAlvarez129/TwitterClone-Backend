@@ -4,11 +4,12 @@ const mongoose = require("mongoose")
 const User = require("../models/User")
 // const Comments = require("../models/Comments")
 const {Tweets,Comment,Retweet} = require("../models/Tweets")
+const Likes = require("../models/Likes")
 const tweetController = {}
 
-const type = Symbol('type')
+const tweet = Symbol('tweet')
 const from = Symbol('from')
-const undo = Symbol('undo')
+
 
 tweetController.getFeed = async (req,res) =>{
   try {
@@ -19,13 +20,12 @@ tweetController.getFeed = async (req,res) =>{
       path:'retweet',
       populate:[
         {path:"author",select:"username fullname profilePic -_id"},
-        {path:'retweet', populate:{path:"author"}}
+        {path:'retweet'},
+        {path:'likes'}
       ]
     })
-    .populate({
-      path:'retweets',
-      
-    })
+    .populate('retweets')
+    .populate("likes")
     .lean({getters: true, virtuals: true}) 
     .exec()
 
@@ -39,16 +39,15 @@ tweetController.getFeed = async (req,res) =>{
 
 tweetController.createTweet = async (req,res) =>{
   try {
-    const {content,reply} = req.body,
+    const {content} = req.body,
     {id} = req.user;
     const files = req.files.map((e) => e.path);
     const tweet = new Tweets({
       author: mongoose.Types.ObjectId(id),
       content,
       files,
-      // parentId: reply && mongoose.Types.ObjectId(reply)
     });
-    tweet.save();
+    await tweet.save();
     res.send();
   } catch (error) {
     console.log(error)
@@ -61,6 +60,7 @@ tweetController.getTweet = async (req,res) =>{
     const {_id} = req.params;
     const tweet = await Tweets.findOne({_id})
     .populate({path:"author",select:"username fullname profilePic -_id"})
+    .populate({path:"like",select:"userLiked"})
     .populate('comments')
     .populate({
       path:'retweet',
@@ -73,7 +73,7 @@ tweetController.getTweet = async (req,res) =>{
       path:'retweets',
       select:"author"
     })
-    .lean({ virtuals: true}) 
+    .lean({virtuals: true}) 
     .exec()
     if (tweet){
       const date = dayjs(tweet.date).format('h:mm A · D MMM YYYY')
@@ -91,21 +91,22 @@ tweetController.likeTweet = async (req,res) =>{
   try {
     const userId = req.user.id;
     const {_id} = req.body;
-    const tweet = await Tweets.findOne({_id})
-    if (tweet){
-      if (tweet.likes.includes(userId)){
-        tweet.likes = tweet.likes.filter((id) => id !== userId)
-        tweet[type] = false
-      } else {
-        tweet.likes.push(userId)
-        tweet[type] = 'like'
-      }
-      tweet[from] = userId
-      await tweet.save()
-      res.send(tweet.likes)
-    } else {
-      res.status(404).send();
-    }
+    const like = new Likes({
+      userLiked: mongoose.Types.ObjectId(userId),
+      tweetId: mongoose.Types.ObjectId(_id)
+    })
+
+    like[from] = userId
+    like[tweet] = _id
+    
+    await like.save()
+
+
+    const likes = await Likes.find({tweetId:mongoose.Types.ObjectId(_id)})
+    .lean({getters: true, virtuals: true})
+    .exec()
+    res.send(likes.map((e) => e.userLiked))
+    
   } catch (error) {
     console.log(error)
     res.status(500).send()
@@ -185,8 +186,8 @@ tweetController.addComment = async (req,res) =>{
       content,
       files,
     })
-    tweet[type] = 'comment'
-    tweet[from] = userId
+    comment[from] = id
+    // comment[tweet] = reply
     await comment.save();
     res.send();
   } catch (error) {
@@ -202,12 +203,12 @@ tweetController.addRetweet = async (req,res) =>{
     const files = req.files?.map((e) => e.path);
     const tweet = new Retweet({
       author: mongoose.Types.ObjectId(userId),
-      retweetId:mongoose.Types.ObjectId(_id),
+      retweet:mongoose.Types.ObjectId(_id),
       quotedRetweet: !!content,
       content,
       files,
     })
-    tweet[type] = 'retweet'
+    // tweet[type] = 'retweet'
     tweet[from] = userId
     await tweet.save()
     res.send()
@@ -228,6 +229,29 @@ tweetController.removeRetweet = async (req,res) => {
       // await Tweets.deleteOne({_id:found._id})
       await found.remove()
       return res.sendStatus(200)
+    } else {
+      return res.sendStatus(404)
+    }
+  } catch (error) {
+    console.log(error)
+    res.status(500).send()
+  }
+}
+
+tweetController.removeLike = async (req,res) => {
+  try {
+    const userId = req.user.id;
+    const {_id} = req.body;
+    const found = await Likes.findOne({tweetId:mongoose.Types.ObjectId(_id),userLiked:userId})
+    if (found){
+      found[from] = userId
+      // await Tweets.deleteOne({_id:found._id})
+      await found.remove()
+      const likes = await Likes.find({tweetId:mongoose.Types.ObjectId(_id)}).lean({ getters: true})
+      .exec()
+      
+
+      return res.send(likes.map((e) => e.userLiked))
     } else {
       return res.sendStatus(404)
     }

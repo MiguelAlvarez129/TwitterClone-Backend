@@ -57,7 +57,7 @@ authController.login = async (req,res) =>{
         fullname:user.fullname,
         profilePic: user.profilePic
       };
-      const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn:"30s"});
+      const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn:process.env.EXPIRE_TOKEN_TIME});
       const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn:"1d"});
 
       user.access_token = accessToken

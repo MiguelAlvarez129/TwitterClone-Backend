@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-
 const notificationSchema = new Schema({
   for:{
     type:Schema.Types.ObjectId,
@@ -22,7 +21,6 @@ const notificationSchema = new Schema({
     default:"",
   },
 })
-
 
 
 const Notifications =  mongoose.model('Notifications',notificationSchema)
