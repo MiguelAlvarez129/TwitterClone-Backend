@@ -20,8 +20,9 @@ tweetController.getFeed = async (req,res) =>{
       path:'retweet',
       populate:[
         {path:"author",select:"username fullname profilePic -_id"},
-        {path:'retweet'},
-        {path:'likes'}
+        {path:'retweet', populate:[{path:"author"}]},
+        {path:'likes'},
+        {path:"comments"}
       ]
     })
     .populate('retweets')
