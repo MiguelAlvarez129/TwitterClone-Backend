@@ -26,6 +26,16 @@ const tweetSchema = new Schema({
           type:String,
       }
   ],
+  likes:[
+    {
+      type:String
+    }
+  ],
+  comments:[
+    {
+      type:String
+    }
+  ]
 },
 {
   toObject : {getters: true, virtuals: true },
@@ -34,12 +44,12 @@ const tweetSchema = new Schema({
 
 tweetSchema.plugin(mongooseLeanGetters)
 tweetSchema.plugin(mongooseLeanVirtuals)
-tweetSchema.virtual('comments',{
-  ref:'Twitter',
-  localField:'_id',
-  foreignField:'parentId',
-  count:true,
-})
+// tweetSchema.virtual('comments',{
+//   ref:'Twitter',
+//   localField:'_id',
+//   foreignField:'parentId',
+//   count:true,
+// })
 
 
 tweetSchema.virtual('retweet',{
@@ -55,12 +65,12 @@ tweetSchema.virtual('retweets',{
   foreignField:'retweet',
 })
 
-tweetSchema.virtual('likes',{
-  ref:'Like',
-  localField:'_id',
-  foreignField:'tweetId',
-  get:(likes) => likes ? likes.map(e => e.userLiked ? e.userLiked : e) : likes
-})
+// tweetSchema.virtual('likes',{
+//   ref:'Like',
+//   localField:'_id',
+//   foreignField:'tweetId',
+//   get:(likes) => likes ? likes.map(e => e.userLiked ? e.userLiked : e) : likes
+// })
 tweetSchema.post('save', async (_doc) =>  console.log(_doc.constructor.modelName))
 tweetSchema.post('remove', async (_doc) => removeNotification(_doc))
 const Tweets = mongoose.model('Twitter',tweetSchema)

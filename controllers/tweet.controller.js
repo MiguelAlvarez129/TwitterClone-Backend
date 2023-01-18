@@ -15,18 +15,6 @@ tweetController.getFeed = async (req,res) =>{
   try {
     const tweets = await Tweets.find({$or:[{__t:[null,'Retweet']}]},null,{ sort: { date: "desc" }})
     .populate({path:"author",select:"username fullname profilePic -_id"})
-    .populate('comments')
-    .populate({
-      path:'retweet',
-      populate:[
-        {path:"author",select:"username fullname profilePic -_id"},
-        {path:'retweet', populate:[{path:"author"}]},
-        {path:'likes'},
-        {path:"comments"}
-      ]
-    })
-    .populate('retweets')
-    .populate("likes")
     .lean({getters: true, virtuals: true}) 
     .exec()
 
@@ -92,21 +80,19 @@ tweetController.likeTweet = async (req,res) =>{
   try {
     const userId = req.user.id;
     const {_id} = req.body;
-    const like = new Likes({
-      userLiked: mongoose.Types.ObjectId(userId),
-      tweetId: mongoose.Types.ObjectId(_id)
-    })
+    const tweet = await Tweets.findOne({_id})
+    if (!tweet){
+      return res.status(404).send("Tweet not found")
+    } else {
+      if (tweet.likes.includes(userId)){
+        tweet.likes = tweet.likes.filter(like => like !== userId)
+      } else {
+        tweet.likes.push(userId)
+      }
 
-    like[from] = userId
-    like[tweet] = _id
-    
-    await like.save()
-
-
-    const likes = await Likes.find({tweetId:mongoose.Types.ObjectId(_id)})
-    .lean({getters: true, virtuals: true})
-    .exec()
-    res.send(likes.map((e) => e.userLiked))
+      await tweet.save()
+      res.send(tweet.likes)
+    }
     
   } catch (error) {
     console.log(error)
@@ -187,9 +173,17 @@ tweetController.addComment = async (req,res) =>{
       content,
       files,
     })
-    comment[from] = id
-    // comment[tweet] = reply
-    await comment.save();
+    await comment.save(); 
+
+    const tweet = await Tweets.findOne({_id:reply});
+    if (!tweet){
+      res.status(404).send("Tweet not found") 
+    } else {
+      tweet.comments.push(comment._id)
+      await tweet.save()
+    }
+
+    
     res.send();
   } catch (error) {
     console.log(error)
@@ -239,27 +233,7 @@ tweetController.removeRetweet = async (req,res) => {
   }
 }
 
-tweetController.removeLike = async (req,res) => {
-  try {
-    const userId = req.user.id;
-    const {_id} = req.body;
-    const found = await Likes.findOne({tweetId:mongoose.Types.ObjectId(_id),userLiked:userId})
-    if (found){
-      found[from] = userId
-      // await Tweets.deleteOne({_id:found._id})
-      await found.remove()
-      const likes = await Likes.find({tweetId:mongoose.Types.ObjectId(_id)}).lean({ getters: true})
-      .exec()
-      
 
-      return res.send(likes.map((e) => e.userLiked))
-    } else {
-      return res.sendStatus(404)
-    }
-  } catch (error) {
-    console.log(error)
-    res.status(500).send()
-  }
-}
+
 
 module.exports = tweetController
